@@ -257,6 +257,31 @@ app.get("/publicaciones", async (req, res) => {
   }
 });
 
+// Agrega una ruta para obtener los cursos aprobados de un usuario
+app.get('/cursosAprobados', async (req, res) => {
+  try {
+    const { usuario } = req.query;
+
+    // Consulta los nombres de los cursos aprobados asociados al usuario
+    conn.query(
+      'SELECT c.nombre FROM cursos_aprobados ca JOIN cursos c ON ca.id_curso = c.id_curso WHERE ca.registro_usuario = ?',
+      [usuario],
+      (err, results) => {
+        if (err) {
+          console.error('Error al obtener los cursos aprobados:', err);
+          res.status(500).send({ error: 'Error interno del servidor' });
+        } else {
+          const cursosAprobados = results.map((row) => row.nombre);
+          res.status(200).json(cursosAprobados);
+        }
+      }
+    );
+  } catch (error) {
+    console.error('Error al procesar la solicitud:', error);
+    res.status(500).send({ error: 'Error interno del servidor' });
+  }
+});
+
 // Agrega una ruta para actualizar el perfil de usuario
 app.post('/actualizarPerfil', async (req, res) => {
   try {
@@ -331,6 +356,50 @@ app.post("/registro", async (req, res) => {
   } catch (error) {
     console.error('Error al registrar usuario:', error);
     res.status(500).send({ error: 'El registro academico ya fue registrado' });
+  }
+});
+// Agrega una ruta para registrar un curso aprobado
+app.post('/registrarCurso', async (req, res) => {
+  try {
+    const { registro_academico, id_curso } = req.body;
+
+    // Verifica si el usuario ya ha registrado este curso aprobado
+    const cursoRegistrado = await new Promise((resolve, reject) => {
+      conn.query(
+        'SELECT * FROM cursos_aprobados WHERE registro_usuario = ? AND id_curso = ?',
+        [registro_academico, id_curso],
+        (err, result) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(result);
+          }
+        }
+      );
+    });
+
+    if (cursoRegistrado.length > 0) {
+      res.status(400).send({ error: 'El curso ya ha sido registrado previamente.' });
+      return;
+    }
+
+    // Si no está registrado, procede a agregarlo a la tabla cursos_aprobados
+    conn.query(
+      'INSERT INTO cursos_aprobados (registro_usuario, id_curso) VALUES (?, ?)',
+      [registro_academico, id_curso],
+      (err, result) => {
+        if (err) {
+          console.error('Error al registrar el curso aprobado:', err);
+          res.status(500).send({ error: 'Error interno del servidor' });
+        } else {
+          console.log('Curso registrado con éxito');
+          res.status(200).send({ message: 'Curso registrado con éxito' });
+        }
+      }
+    );
+  } catch (error) {
+    console.error('Error al procesar la solicitud:', error);
+    res.status(500).send({ error: 'Error interno del servidor' });
   }
 });
 
