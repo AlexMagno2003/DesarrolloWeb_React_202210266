@@ -71,27 +71,34 @@ function registrarComentario(id_publicacion, texto) {
   });
 }
 
-function obtenerPublicacionesConComentarios() {
+function obtenerPublicacionesConComentarios(cursoSeleccionado, catedraticoSeleccionado) {
   return new Promise((resolve, reject) => {
-    const sql = `
-     SELECT
-    p.id_publicacion,
-    u.nombre AS nombre_usuario,
-    u.apellidos AS apellidos_usuario,
-    p.id_curso,
-    c.nombre AS nombre_curso,
-    p.id_catedratico,
-    cat.nombre AS nombre_catedratico,
-    p.mensaje_publicacion,
-    p.fecha_creacion,
-    co.id_comentario,
-    co.texto
-    FROM Publicaciones p
-    LEFT JOIN users u ON p.registro_usuario = u.registro_academico
-    LEFT JOIN catedraticos cat ON p.id_catedratico = cat.id_catedratico
-    LEFT JOIN cursos c ON p.id_curso = c.id_curso
-    LEFT JOIN comentarios co ON p.id_publicacion = co.id_publicacion
+    let sql = `
+      SELECT
+        p.id_publicacion,
+        u.nombre AS nombre_usuario,
+        u.apellidos AS apellidos_usuario,
+        p.id_curso,
+        c.nombre AS nombre_curso,
+        p.id_catedratico,
+        cat.nombre AS nombre_catedratico,
+        p.mensaje_publicacion,
+        p.fecha_creacion,
+        co.id_comentario,
+        co.texto
+      FROM Publicaciones p
+      LEFT JOIN users u ON p.registro_usuario = u.registro_academico
+      LEFT JOIN catedraticos cat ON p.id_catedratico = cat.id_catedratico
+      LEFT JOIN cursos c ON p.id_curso = c.id_curso
+      LEFT JOIN comentarios co ON p.id_publicacion = co.id_publicacion
     `;
+
+    // Agregar condiciones de filtrado si se selecciona un curso o un catedrático
+    if (cursoSeleccionado) {
+      sql += ` WHERE p.id_curso = ${cursoSeleccionado}`;
+    } else if (catedraticoSeleccionado) {
+      sql += ` WHERE p.id_catedratico = ${catedraticoSeleccionado}`;
+    }
 
     conn.query(sql, (err, results) => {
       if (err) return reject(err);
@@ -122,10 +129,16 @@ function obtenerPublicacionesConComentarios() {
 
       const publicaciones = Object.values(publicacionesConComentarios);
 
-      resolve(publicaciones);
+      // Verificar si no hay coincidencias y devolver un mensaje
+      if (publicaciones.length === 0) {
+        resolve([{ mensaje: 'No hay publicaciones con estos cursos o catedráticos.' }]);
+      } else {
+        resolve(publicaciones);
+      }
     });
   });
 }
+
 
 // Función para obtener todos los ID y nombres de cursos
 function obtenerCursos() {
@@ -179,7 +192,8 @@ app.get("/catedraticos", async (req, res) => {
 // Ruta para obtener todas las publicaciones con comentarios
 app.get("/publicaciones", async (req, res) => {
   try {
-    const publicaciones = await obtenerPublicacionesConComentarios();
+    const { curso, catedratico } = req.query;
+    const publicaciones = await obtenerPublicacionesConComentarios(curso, catedratico);
     res.status(200).json(publicaciones);
   } catch (error) {
     console.error('Error al obtener las publicaciones:', error);
