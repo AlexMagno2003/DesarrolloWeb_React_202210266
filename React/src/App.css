@@ -113,3 +113,36 @@ a {
   margin-top: 10px;
   /* Espacio entre botones */
 }
+
+/* Estilos para el contenedor principal */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+}
+
+/* Estilos para los botones */
+.actions button {
+  background-color: rgb(39, 131, 212);
+  padding: 10px;
+  border: 0;
+  min-width: 100px;
+  border-radius: 5px;
+  color: white;
+  margin-left: 10px;
+  /* Espacio entre botones */
+  cursor: pointer;
+}
+
+/* Estilos para los select en fila */
+.filter-form label,
+.filter-form select {
+  display: inline-block;
+  margin-right: 10px;
+  /* Espacio entre elementos */
+}

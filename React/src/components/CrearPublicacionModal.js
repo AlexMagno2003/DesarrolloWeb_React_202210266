@@ -1,6 +1,18 @@
 import React, { useState } from 'react';
 import Modal from 'react-modal';
-
+const customStyles = {
+  overlay: {
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Fondo oscuro del modal
+  },
+  content: {
+    width: '60%', // Ancho del contenido del modal
+    height: 'auto', // Altura automática según el contenido
+    top: '50%', // Posición vertical en el centro
+    left: '50%', // Posición horizontal en el centro
+    transform: 'translate(-50%, -50%)', // Centrar el modal
+    padding: '20px', // Espacio interno
+  },
+};
 const CrearPublicacionModal = ({ isOpen, onRequestClose, cursos, catedraticos, registroAcademico }) => {
   const [cursoSeleccionado, setCursoSeleccionado] = useState('');
   const [catedraticoSeleccionado, setCatedraticoSeleccionado] = useState('');
@@ -41,6 +53,7 @@ const CrearPublicacionModal = ({ isOpen, onRequestClose, cursos, catedraticos, r
       isOpen={isOpen}
       onRequestClose={onRequestClose}
       contentLabel="Crear Publicación"
+      style={customStyles} // 
     >
       <h2>Crear Publicación</h2>
       <form class="form">

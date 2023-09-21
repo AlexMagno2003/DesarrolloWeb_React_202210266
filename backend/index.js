@@ -31,6 +31,22 @@ function buscarUsuario(usuario, contra) {
     })
 }
 
+function buscarPerfilHome(usuario) {
+    return new Promise((resolve, reject) => {
+        conn.query(`SELECT registro_academico FROM users WHERE registro_academico=? `, [usuario], function (err, result) {
+            if (err) return reject(err);
+            if (result[0]) {
+                let resultado = JSON.stringify(result[0]);
+              let jresultado = JSON.parse(resultado);
+              console.log(jresultado)
+                return resolve(jresultado)
+            } else {
+                return resolve(null)
+            }
+        })
+    })
+}
+
 function registrarUsuario(registro_academico, email, nombre, apellidos, contrasena) {
   return new Promise((resolve, reject) => {
     const sql = "INSERT INTO users (registro_academico, email, nombre, apellidos, contrasena) VALUES (?, ?, ?, ?, ?)";
@@ -43,12 +59,16 @@ function registrarUsuario(registro_academico, email, nombre, apellidos, contrase
     });
   });
 }
-
+const moment = require('moment-timezone');
 function registrarPublicacion(registro_usuario, id_curso, id_catedratico, mensaje_publicacion) {
   return new Promise((resolve, reject) => {
-    const fecha_creacion = new Date().toISOString().slice(0, 19).replace('T', ' ');
+    const fechaActual = moment().tz('America/Guatemala');
+    
+    // Obtener la fecha actual en la zona horaria local
+    const fechaFormateada = fechaActual.format('YYYY-MM-DD HH:mm:ss');
+
     const sql = "INSERT INTO Publicaciones (registro_usuario, id_curso, id_catedratico, mensaje_publicacion, fecha_creacion) VALUES (?, ?, ?, ?, ?)";
-    const values = [registro_usuario, id_curso, id_catedratico, mensaje_publicacion, fecha_creacion];
+    const values = [registro_usuario, id_curso, id_catedratico, mensaje_publicacion, fechaFormateada];
 
     conn.query(sql, values, function (err, result) {
       if (err) return reject(err);
@@ -94,7 +114,9 @@ function obtenerPublicacionesConComentarios(cursoSeleccionado, catedraticoSelecc
     `;
 
     // Agregar condiciones de filtrado si se selecciona un curso o un catedrático
-    if (cursoSeleccionado) {
+     if (cursoSeleccionado && catedraticoSeleccionado) {
+      sql += ` WHERE p.id_curso = ${cursoSeleccionado} AND p.id_catedratico = ${catedraticoSeleccionado}`;
+    } else if (cursoSeleccionado) {
       sql += ` WHERE p.id_curso = ${cursoSeleccionado}`;
     } else if (catedraticoSeleccionado) {
       sql += ` WHERE p.id_catedratico = ${catedraticoSeleccionado}`;
@@ -131,7 +153,7 @@ function obtenerPublicacionesConComentarios(cursoSeleccionado, catedraticoSelecc
 
       // Verificar si no hay coincidencias y devolver un mensaje
       if (publicaciones.length === 0) {
-        resolve([{ mensaje: 'No hay publicaciones con estos cursos o catedráticos.' }]);
+        resolve(publicaciones);
       } else {
         resolve(publicaciones);
       }
@@ -166,6 +188,40 @@ function obtenerCatedraticos() {
   });
 }
 
+function buscarPerfil(usuario) {
+    return new Promise((resolve, reject) => {
+        conn.query(`SELECT registro_academico, email, contrasena, nombre, apellidos FROM users WHERE registro_academico=? `, [usuario], function (err, result) {
+            if (err) return reject(err);
+          if (result) {
+              const perfil = {};
+      result.forEach((row) => {
+          perfil[0] = {
+            registro_academico: row.registro_academico,
+            email: row.email,
+            contrasena: row.contrasena,
+            nombre: row.nombre,
+            apellidos: row.apellidos,
+          };
+      });
+            const perfilBuscado = Object.values(perfil);
+            return resolve(perfilBuscado)
+            } else {
+                return resolve(perfil)
+            }
+        })
+    })
+}
+
+app.get("/buscarPerfil", async (req, res) => {
+  try {
+    const { usuario } = req.query;
+    const perfil = await buscarPerfil(usuario);
+    res.status(200).json(perfil);
+  } catch (error) {
+    console.error('Error al obtener las publicaciones:', error);
+    res.status(500).send({ error: 'Error interno del servidor' });
+  }
+});
 // Ruta para obtener todos los cursos
 app.get("/cursos", async (req, res) => {
   try {
@@ -201,6 +257,31 @@ app.get("/publicaciones", async (req, res) => {
   }
 });
 
+// Agrega una ruta para actualizar el perfil de usuario
+app.post('/actualizarPerfil', async (req, res) => {
+  try {
+    const { registro_academico, email, nombre, apellidos, contrasena } = req.body;
+    
+    // Realiza la actualización en la base de datos
+    conn.query(
+      'UPDATE users SET email = ?, nombre = ?, apellidos = ?, contrasena = ? WHERE registro_academico = ?',
+      [email, nombre, apellidos, contrasena, registro_academico],
+      (err, result) => {
+        if (err) {
+          console.error('Error al actualizar el perfil:', err);
+          res.status(500).send({ error: 'Error interno del servidor' });
+        } else {
+          console.log('Perfil actualizado con éxito');
+          res.status(200).send({ message: 'Perfil actualizado con éxito' });
+        }
+      }
+    );
+  } catch (error) {
+    console.error('Error al procesar la solicitud:', error);
+    res.status(500).send({ error: 'Error interno del servidor' });
+  }
+});
+
 app.post("/login", async (req, res) => {
     const { usuario, contra } = req.body;
     
@@ -215,6 +296,23 @@ app.post("/login", async (req, res) => {
     }
     else {
         res.status(400).send({ error: 'Registro Académico o Contraseña incorrectas' });
+    }
+})
+
+app.post("/perfil", async (req, res) => {
+    const { usuario } = req.body;
+    
+    // if (usuario != lusuario) res.status(400).send({ error: 'usuario incorrecto' });
+    // if (contra != lcontra) res.status(400).send({ error: 'contraseña incorrecto' });
+    if (!usuario) {
+        res.status(400).send({ error: 'faltan campos' });
+    }
+    const resultado = await buscarPerfilHome(usuario);
+    if (resultado) {
+        res.send({username: resultado.registro_academico})
+    }
+    else {
+        res.status(400).send({ error: 'No existe el Registro Académico' });
     }
 })
 

@@ -4,6 +4,7 @@ import { BrowserRouter, Route, Routers, Navigate,Routes, } from 'react-router-do
 import Login from './components/Login'
 import Home from './components/Home'
 import Registro from './components/Registro'
+import Perfil from './components/Perfil'
 import './App.css';
 
 function App() {
@@ -37,6 +38,8 @@ function App() {
         <Route path='/login' element={<Login/>}>
         </Route>
         <Route path='/registro' element={<Registro/>}>
+        </Route>
+        <Route path='/perfil/:usuario' element={<Perfil/>}>
         </Route>
       </Routes>
     </BrowserRouter>
