@@ -66,3 +66,50 @@ a {
   color: #a94442;
   padding: 10px;
 }
+/* Estilos para las tarjetas de publicaciones */
+.card-publicacion {
+  max-width: 400px;
+  /* Ancho máximo de la tarjeta */
+  margin: 0 auto;
+  /* Centra la tarjeta en el centro de la pantalla */
+  padding: 20px;
+  /* Espaciado interno de la tarjeta */
+  border: 1px solid #ccc;
+  /* Borde de la tarjeta */
+  border-radius: 5px;
+  /* Borde redondeado de la tarjeta */
+  margin-bottom: 20px;
+  /* Espacio entre tarjetas */
+}
+
+/* Estilos para los comentarios */
+.card-comentario {
+  max-width: 400px;
+  /* Ancho máximo de la tarjeta de comentario */
+  margin: 0 auto;
+  /* Centra la tarjeta en el centro de la pantalla */
+  padding: 10px;
+  /* Espaciado interno de la tarjeta de comentario */
+  border: 1px solid #ccc;
+  /* Borde de la tarjeta de comentario */
+  border-radius: 5px;
+  /* Borde redondeado de la tarjeta de comentario */
+  margin-top: 10px;
+  /* Espacio entre comentarios */
+}
+
+
+
+/* Estilos para los botones */
+.card-publicacion button,
+.card-comentario button {
+  background-color: rgb(39, 131, 212);
+  padding: 10px;
+  border: 0;
+  width: 100%;
+  border-radius: 5px;
+  color: white;
+  cursor: pointer;
+  margin-top: 10px;
+  /* Espacio entre botones */
+}

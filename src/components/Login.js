@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Navigate, useNavigate, Link } from "react-router-dom";
-function Login({ registroAcademico, iniciar }) {
+function Login({ registroAcademico, nombre, iniciar }) {
     
     const [errorResponse, setErrorResponse] = useState("");
     const handleSubmit = (event) => {
@@ -13,8 +13,12 @@ function Login({ registroAcademico, iniciar }) {
                 setErrorResponse(value.error);
             }
             if (value.username != '' && value.username != undefined) {
-                    registroAcademico(value.username)    
+                    registroAcademico(registroAcademicoInput) 
+                    nombre(value.username)   
                     iniciar(true)
+                    localStorage.setItem('sessionToken', true);
+                    localStorage.setItem('registroToken', registroAcademicoInput);
+                    localStorage.setItem('nombreToken', value.username);
                 }
               
         })
